@@ -319,7 +319,7 @@ NS_ASSUME_NONNULL_BEGIN
   NSDictionary *_Nonnull params = [args objectAtIndex:0];
 
   TiThreadPerformOnMainThread(^{
-    FBSDKSharePhotoContent *content = [FacebookModule sharePhotoContentFromDictionary:params];
+    FBSDKSharePhotoContent *content = [self sharePhotoContentFromDictionary:params];
     FBSDKShareDialog *dialog = [[FBSDKShareDialog alloc] init];
 
     [dialog setMode:[TiUtils intValue:[params objectForKey:@"mode"] def:FBSDKShareDialogModeAutomatic]];
@@ -869,7 +869,7 @@ NS_ASSUME_NONNULL_BEGIN
   return content;
 }
 
-+ (FBSDKSharePhotoContent *_Nonnull)sharePhotoContentFromDictionary:(NSDictionary *)dictionary
+- (FBSDKSharePhotoContent *_Nonnull)sharePhotoContentFromDictionary:(NSDictionary *)dictionary
 {
   FBSDKSharePhotoContent *content = [[FBSDKSharePhotoContent alloc] init];
 
@@ -883,10 +883,10 @@ NS_ASSUME_NONNULL_BEGIN
     BOOL userGenerated = [TiUtils boolValue:photoDictionary[@"userGenerated"]];
 
     // A photo can either be a Blob or String
-    if ([photo isKindOfClass:[TiBlob class]]) {
-      nativePhoto.image = [(TiBlob *)photo image];
-    } else if ([photo isKindOfClass:[NSString class]]) {
+    if ([photo isKindOfClass:[NSString class]] && [photo hasPrefix:@"http"]) {
       nativePhoto.imageURL = [NSURL URLWithString:(NSString *)photo];
+    } else if (photo != nil) {
+      nativePhoto.image = [TiUtils toImage:photo proxy:self];
     } else {
       NSLog(@"[ERROR] Required \"photo\" not found or of unknown type: %@", NSStringFromClass([photo class]));
     }
